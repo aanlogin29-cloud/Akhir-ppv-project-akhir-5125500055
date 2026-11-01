@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KostBudget - Manajemen Keuangan Kos</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Chart.js untuk Diagram Grafik -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <!-- MODAL SETUP AKUN PERTAMA KALI (POP-UP AWAL) -->
+  <div id="welcome-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="logo-icon-bg">
+          <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="6" width="20" height="12" rx="2" />
+            <circle cx="12" cy="12" r="2" />
+            <path d="M6 12h.01M18 12h.01" />
+          </svg>
+        </div>
+        <h2>Selamat Datang di KostBudget! 👋</h2>
+        <p>Atur akun dan isi saldo awal uang kos kamu untuk mulai mencatat keuangan.</p>
+      </div>
+
+      <form id="setup-form">
+        <div class="form-group">
+          <label for="setup-name">Nama Pengguna / Panggilan</label>
+          <input type="text" id="setup-name" placeholder="Contoh: Anisa" required>
+        </div>
+
+        <div class="form-group">
+          <label for="setup-balance">Saldo Awal Uang Kos (Rp)</label>
+          <input type="text" id="setup-balance" class="input-currency" placeholder="Contoh: 1.500.000" required>
+        </div>
+
+        <div class="form-group">
+          <label for="setup-target">Target Maksimal Anggaran Pengeluaran (Rp)</label>
+          <input type="text" id="setup-target" class="input-currency" placeholder="Contoh: 1.000.000" required>
+        </div>
+
+        <button type="submit" class="btn-primary">Simpan & Mulai Gunakan 🚀</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- NAVBAR UTAMA -->
+  <header class="navbar">
+    <div class="logo-container">
+      <div class="logo-icon-bg">
+        <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="6" width="20" height="12" rx="2" />
+          <circle cx="12" cy="12" r="2" />
+          <path d="M6 12h.01M18 12h.01" />
+        </svg>
+      </div>
+      <div>
+        <h1>KostBudget</h1>
+        <small>Manajemen Keuangan Kos</small>
+      </div>
+    </div>
+
+    <!-- NAVIGATION TABS -->
+    <nav class="nav-tabs">
+      <button type="button" class="nav-btn active" onclick="switchTab('tab-catat', this)">📄 Catat Transaksi</button>
+      <button type="button" class="nav-btn" onclick="switchTab('tab-riwayat', this)">📑 Riwayat & Kategori</button>
+      <button type="button" class="nav-btn" onclick="switchTab('tab-profil', this)">👤 Profil & Target</button>
+    </nav>
+  </header>
+
+  <main class="container">
+
+    <!-- TAB 1: CATAT TRANSAKSI -->
+    <div id="tab-catat" class="tab-content active">
+      <div class="grid-2col">
+        <!-- Form Transaksi -->
+        <section class="card">
+          <h3>➕ Tambah Pengeluaran / Pemasukan</h3>
+          <form id="transaction-form">
+            <div class="form-group">
+              <label for="type">Jenis Transaksi</label>
+              <select id="type" required>
+                <option value="expense">Pengeluaran (Mengurangi Saldo)</option>
+                <option value="income">Pemasukan (Menambah Saldo)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="description">Keterangan Transaksi</label>
+              <input type="text" id="description" placeholder="Contoh: Makan Warteg / Bayar Kos" required>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="amount">Nominal (Rp)</label>
+                <input type="text" id="amount" class="input-currency" placeholder="Contoh: 15.000" required>
+              </div>
+              <div class="form-group">
+                <label for="date">Tanggal</label>
+                <input type="date" id="date" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="category">Kategori</label>
+              <select id="category" required>
+                <option value="Makanan & Minum">Makanan & Minum</option>
+                <option value="Kosan">Kosan</option>
+                <option value="Kuliah & ATK">Kuliah & ATK</option>
+                <option value="Hiburan">Hiburan</option>
+                <option value="Lainnya">Lainnya</option>
+              </select>
+            </div>
+
+            <button type="submit" class="btn-primary">Simpan Transaksi ➔</button>
+          </form>
+        </section>
+
+        <!-- Status Dompet (e-Wallet System) -->
+        <section class="card wallet-card">
+          <div class="wallet-top">
+            <h3>💳 Status Dompet</h3>
+            <span class="badge-status">Realtime e-Wallet</span>
+          </div>
+
+          <div class="balance-display">
+            <small>Sisa Saldo Uang</small>
+            <h2 id="total-balance">Rp 0</h2>
+          </div>
+
+          <div class="wallet-stats">
+            <div class="stat-box">
+              <small>Total Pemasukan</small>
+              <strong id="total-income" class="text-success">Rp 0</strong>
+            </div>
+            <div class="stat-box">
+              <small>Total Pengeluaran</small>
+              <strong id="total-expense" class="text-danger">Rp 0</strong>
+            </div>
+          </div>
+
+          <div class="recent-mini-list">
+            <h4>Transaksi Terakhir:</h4>
+            <div id="latest-transaction" class="mini-tx-item">Belum ada catatan baru</div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <!-- TAB 2: RIWAYAT & DIAGRAM -->
+    <div id="tab-riwayat" class="tab-content">
+      <section class="card mb-20">
+        <div class="chart-header">
+          <h3>📊 Diagram Pengeluaran</h3>
+          <div class="filter-buttons">
+            <button type="button" class="filter-btn active" onclick="setChartPeriod('daily', this)">Harian</button>
+            <button type="button" class="filter-btn" onclick="setChartPeriod('weekly', this)">Mingguan</button>
+            <button type="button" class="filter-btn" onclick="setChartPeriod('monthly', this)">Bulanan</button>
+          </div>
+        </div>
+        <div class="chart-container">
+          <canvas id="expenseChart"></canvas>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="riwayat-header">
+          <h3>Semua Riwayat Pengeluaran</h3>
+          <div class="search-box">
+            <input type="text" id="search-input" placeholder="Cari riwayat transaksi..." oninput="renderTransactions()">
+          </div>
+        </div>
+
+        <div class="category-filters">
+          <button type="button" class="cat-filter-btn active" onclick="setCategoryFilter('Semua', this)">Semua</button>
+          <button type="button" class="cat-filter-btn" onclick="setCategoryFilter('Makanan & Minum', this)">Makanan & Minum</button>
+          <button type="button" class="cat-filter-btn" onclick="setCategoryFilter('Kosan', this)">Kosan</button>
+          <button type="button" class="cat-filter-btn" onclick="setCategoryFilter('Kuliah & ATK', this)">Kuliah & ATK</button>
+          <button type="button" class="cat-filter-btn" onclick="setCategoryFilter('Hiburan', this)">Hiburan</button>
+          <button type="button" class="cat-filter-btn" onclick="setCategoryFilter('Lainnya', this)">Lainnya</button>
+        </div>
+
+        <div id="transaction-grid" class="transaction-grid"></div>
+      </section>
+    </div>
+
+    <!-- TAB 3: PROFIL & TARGET -->
+    <div id="tab-profil" class="tab-content">
+      <section class="card profile-header-card mb-20">
+        <div class="profile-avatar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+        </div>
+        <div class="profile-info">
+          <h2 id="profile-display-name">Akun Pengguna Baru</h2>
+          <p id="profile-display-desc" class="text-muted">Target keuangan kos aktif.</p>
+          <div class="target-badge-box">
+            <span>Target Maksimal Anggaran: <strong id="profile-display-target">Rp 0</strong></span>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h3>📝 Atur Ulang Profil & Target</h3>
+        <form id="profile-edit-form">
+          <div class="form-group">
+            <label for="edit-name">Nama Lengkap / Panggilan</label>
+            <input type="text" id="edit-name" required>
+          </div>
+          <div class="form-group">
+            <label for="edit-target">Target Maksimal Anggaran (Rp)</label>
+            <input type="text" id="edit-target" class="input-currency" placeholder="Contoh: 1.000.000" required>
+          </div>
+          <button type="submit" class="btn-primary">Update Profil ✓</button>
+        </form>
+
+        <!-- TOMBOL RESET / HAPUS PROFIL & DATA -->
+        <div style="margin-top: 15px; border-top: 1px solid #e2e8f0; padding-top: 15px;">
+          <button type="button" onclick="resetAllData()" style="width:100%; padding:12px; background-color:#e74c3c; color:white; border:none; border-radius:10px; font-weight:700; cursor:pointer;">
+            🗑️ Hapus Profil & Reset Semua Data
+          </button>
+        </div>
+      </section>
+    </div>
+
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
